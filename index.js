@@ -9,7 +9,7 @@ const END_ROW = ROWS - 1;
 // const WIDTH = 900;
 // const HEIGHT = 900;
 const WIDTH = innerWidth - 10;
-const HEIGHT = innerHeight - 10;
+const HEIGHT = innerHeight - 10 - 100;
 
 const RANDOM_SEED = 0.5; // 0.0 - 1.0
 
@@ -17,6 +17,8 @@ const RANDOM_SEED = 0.5; // 0.0 - 1.0
 // const h = innerHeight;
 
 const path = [];
+
+let method = 'quadratic';
 
 class Spot {
   constructor(i, j, g = 0, h = 0, f = 0) {
@@ -39,21 +41,21 @@ class Spot {
       circle(
         this.i * (WIDTH / COLS) + HEIGHT / ROWS / 2,
         this.j * (HEIGHT / ROWS) + HEIGHT / ROWS / 2,
-        WIDTH / COLS / 2,
+        WIDTH / COLS / 2
       );
     } else {
       rect(this.i * (WIDTH / COLS), this.j * (HEIGHT / ROWS), WIDTH / COLS, HEIGHT / ROWS);
     }
   }
 
-  showProperty() {
-    // textSize(10);
-    // fill(0);
-    // text(this.g, this.i * (WIDTH / COLS) + 3, this.j * (HEIGHT / ROWS) + 10);
-    // text(this.h, this.i * (WIDTH / COLS) + 3, this.j * (HEIGHT / ROWS) + 40);
-    // textSize(15);
-    // text(this.h, this.i * (WIDTH / COLS) + WIDTH / COLS / 2 - 5, this.j * (HEIGHT / ROWS) + HEIGHT / ROWS / 2 + 5);
-  }
+  // showProperty() {
+  //   textSize(10);
+  //   fill(0);
+  //   text(this.g, this.i * (WIDTH / COLS) + 3, this.j * (HEIGHT / ROWS) + 10);
+  //   text(this.h, this.i * (WIDTH / COLS) + 3, this.j * (HEIGHT / ROWS) + 40);
+  //   textSize(15);
+  //   text(this.h, this.i * (WIDTH / COLS) + WIDTH / COLS / 2 - 5, this.j * (HEIGHT / ROWS) + HEIGHT / ROWS / 2 + 5);
+  // }
 
   addNeighbors(grid) {
     if (grid?.[this.i]?.[this.j - 1]) this.neighbors.push(grid[this.i][this.j - 1]); // ⬆️
@@ -71,9 +73,7 @@ function rnd(n) {
   return Math.floor(Math.random() * n);
 }
 
-const grig = [...Array(COLS)].map((_, indexI) =>
-  [...Array(ROWS)].map((_, indexY) => new Spot(indexI, indexY)),
-);
+const grig = [...Array(COLS)].map((_, indexI) => [...Array(ROWS)].map((_, indexY) => new Spot(indexI, indexY)));
 
 // const start = grig[START_COL][START_ROW];
 // const end = grig[END_COL][END_ROW];
@@ -87,11 +87,16 @@ const openSet = [start];
 const closedSet = [];
 
 function getHeuristic(a, b) {
-  return floor(sqrt(pow(abs(a.i - b.i), 2) + pow(abs(a.j - b.j), 2)) * 10);
-  return pow(floor(sqrt(pow(abs(a.i - b.i), 2) + pow(abs(a.j - b.j), 2)) * 10), 2);
-  // return sqrt(floor(sqrt(pow(abs(a.i - b.i), 2) + pow(abs(a.j - b.j), 2)) * 10), 2);
-
-  return 1;
+  switch (method) {
+    case 'through':
+      return 1;
+    case 'straight':
+      return sqrt(floor(sqrt(pow(abs(a.i - b.i), 2) + pow(abs(a.j - b.j), 2)) * 10), 2);
+    case 'distance':
+      return floor(sqrt(pow(abs(a.i - b.i), 2) + pow(abs(a.j - b.j), 2)) * 10);
+    case 'quadratic':
+      return floor(pow(abs(a.i - b.i), 2) + pow(abs(a.j - b.j), 2) * 10);
+  }
 }
 
 function removeFromArray(arr, elt) {
@@ -121,11 +126,17 @@ function setup() {
 
   start.block = false;
   end.block = false;
+
+  [...document.querySelectorAll('input')].forEach((s, i, arr) => {
+    s.addEventListener('input', () => {
+      method = s.value;
+    });
+  });
 }
 
 function draw() {
   if (!openSet.length) {
-    console.log('LOG ::: index.js : no solution!');
+    alert('No solution!');
     noLoop();
 
     return;
@@ -215,10 +226,7 @@ function draw() {
   beginShape();
 
   path.forEach((spot) => {
-    vertex(
-      spot.i * (WIDTH / COLS) + WIDTH / COLS / 2,
-      spot.j * (HEIGHT / ROWS) + HEIGHT / ROWS / 2,
-    );
+    vertex(spot.i * (WIDTH / COLS) + WIDTH / COLS / 2, spot.j * (HEIGHT / ROWS) + HEIGHT / ROWS / 2);
   });
 
   endShape();
@@ -236,10 +244,7 @@ function draw() {
     beginShape();
 
     path.forEach((spot) => {
-      vertex(
-        spot.i * (WIDTH / COLS) + WIDTH / COLS / 2,
-        spot.j * (HEIGHT / ROWS) + HEIGHT / ROWS / 2,
-      );
+      vertex(spot.i * (WIDTH / COLS) + WIDTH / COLS / 2, spot.j * (HEIGHT / ROWS) + HEIGHT / ROWS / 2);
     });
 
     endShape();
